@@ -63,9 +63,28 @@ class Cryptograms:
                 i = 0
         return cryptogram
 
-class decoding:
 
-    
+class Decrypting:
+
+    def __init__(self, cryptograms, coding = "coding", entropy = "entropy"):
+
+        self.cryptograms = cryptograms
+        self.propositions = {}
+        self.codingTable = {}
+        self.decodingTable = {}
+        with open(coding) as file:
+            for line in file.readline():
+                i = line.find(";")
+                self.codingTable[line[0:i]] = line[i+1:]
+                self.decodingTable[line[i+1:]] = line[0:]
+
+        self.enropy = []
+        with open(entropy) as file:
+            for line in file.readline():
+                entropy.append[line]
+
+    #def decryptOneSign(self, ):
+
 if __name__ == "__main__":
 
     cryptograms = Cryptograms(20)
