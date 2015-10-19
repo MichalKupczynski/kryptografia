@@ -19,6 +19,16 @@ class ModuloTwo:
 
         return s
 
+    def intToBait(self, i):
+        bait =  "{0:b}".format(i)
+        for i in range(0,8-len(bait)):
+            bait = "0"+bait
+
+
+    def baitToInt(self, bait):
+        i = int(bait)
+
+
 
 class Cryptograms:
 
@@ -68,8 +78,8 @@ class Decrypting:
 
     def __init__(self, cryptograms, coding = "coding", entropy = "entropy"):
 
+        self.M2 = ModuloTwo()
         self.cryptograms = cryptograms
-        self.propositions = {}
         self.codingTable = {}
         self.decodingTable = {}
         with open(coding) as file:
@@ -79,11 +89,33 @@ class Decrypting:
                 self.decodingTable[line[i+1:]] = line[0:]
 
         self.enropy = []
+        self.q = 0
         with open(entropy) as file:
             for line in file.readline():
                 entropy.append[line]
+                q = q +1
 
-    #def decryptOneSign(self, ):
+    def decryptOneSign(self, n, q = self.q):
+
+        propositions = {}
+        m = self.cryptograms.text[n]
+        for i in range(0, self.cryptograms.numberOfCryptograms):
+            m1 = self.cryptograms.cryptograms[n][j]
+            result = self.M2.xorBait(m,m1)
+            for j in range(0, q):
+                s = self.entropy[j]
+                if s in self.decodingTable:
+                    c = self.M2.intToBait(s)
+                    binaryR = self.M2.xorBait(result,c)
+                    R = self.M2.baitToInt(binaryR)
+                    if R in self.codingTable:
+                        if R in propositions:
+                            propositions[R] = propositions[R] +1
+                        else:
+                            propositions[R] = 1
+
+        return sorted(propositions.iteritems(), key = lambda (k,v): v, reverse = True)[0][0]
+
 
 if __name__ == "__main__":
 
