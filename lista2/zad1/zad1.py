@@ -100,22 +100,34 @@ class Decrypting:
         propositions = {}
         m = self.cryptograms.text[n]
         for i in range(0, self.cryptograms.numberOfCryptograms):
-            m1 = self.cryptograms.cryptograms[n][j]
-            result = self.M2.xorBait(m,m1)
-            for j in range(0, q):
-                s = self.entropy[j]
-                if s in self.decodingTable:
-                    c = self.M2.intToBait(s)
-                    binaryR = self.M2.xorBait(result,c)
-                    R = self.M2.baitToInt(binaryR)
-                    if R in self.codingTable:
-                        if R in propositions:
-                            propositions[R] = propositions[R] +1
-                        else:
-                            propositions[R] = 1
+            try:
+                m1 = self.cryptograms.cryptograms[n][j]
+                result = self.M2.xorBait(m,m1)
+                for j in range(0, q):
+                    s = self.entropy[j]
+                    if s in self.decodingTable:
+                        c = self.M2.intToBait(s)
+                        binaryR = self.M2.xorBait(result,c)
+                        R = self.M2.baitToInt(binaryR)
+                        if R in self.codingTable:
+                            if R in propositions:
+                                propositions[R] = propositions[R] +1
+                            else:
+                                propositions[R] = 1
+            except:
+                pass
 
         return sorted(propositions.iteritems(), key = lambda (k,v): v, reverse = True)[0][0]
 
+    def decryptMessage(self, result):
+
+        Result = str()
+        i = 0
+        for s in self.cryptograms.text:
+            Result = Result + self.decryptOneSign(i)
+            i = i+1
+        with open(result) as file:
+            file.write(Result)
 
 if __name__ == "__main__":
 
