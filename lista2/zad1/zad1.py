@@ -10,6 +10,16 @@ class ModuloTwo:
         else:
             return 1
 
+    def xorBait(self, a, b):
+
+        s = str()
+
+        for i in range(0, len(a)):
+            s = s + self.xor(a[i], b[i])
+
+        return s
+
+
 class Cryptograms:
 
     def __init__(self, numberOfCyptograms, text = "text", cryptogram = "cryptogram" ):
@@ -53,6 +63,9 @@ class Cryptograms:
                 i = 0
         return cryptogram
 
+class decoding:
+
+    
 if __name__ == "__main__":
 
     cryptograms = Cryptograms(20)
