@@ -107,22 +107,21 @@ class Decrypting:
         for i in range(0, self.cryptograms.numberOfCryptograms):
             try:
                 m1 = self.cryptograms.cryptograms[i][n]
-                #print m1
-                #print "czesc"
+
+
                 result = self.M2.xorBait(m,m1)
-                #print self.codingTable
+
                 for j in range(0, q):
                     s = self.entropy[j]
-                    if s in self.decodingTable:
-                        #print s
-                        c = self.M2.intToBait(self.decodingTable[s])
-                        binaryR = self.M2.xorBait(result,c)
-                        R = str(self.M2.baitToInt(binaryR))
-                        if R in self.codingTable:
-                            if R in propositions:
-                                propositions[R] = propositions[R] +1
-                            else:
-                                propositions[R] = 1
+                    #print s
+                    c = self.M2.intToBait(self.decodingTable[s])
+                    binaryR = self.M2.xorBait(result,c)
+                    R = str(self.M2.baitToInt(binaryR))
+                    if R in self.codingTable:
+                        if R in propositions:
+                            propositions[R] = propositions[R] +1
+                        else:
+                            propositions[R] = 1
             except:
                 pass
         print propositions
@@ -147,4 +146,5 @@ if __name__ == "__main__":
     cryptograms = Cryptograms(20)
     decrypting = Decrypting(cryptograms, "kodowanie", "entropia")
     decrypting.decryptMessage("odczytany")
+
 
