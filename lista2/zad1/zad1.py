@@ -84,7 +84,8 @@ class Decrypting:
         self.codingTable = {}
         self.decodingTable = {}
         with open(coding) as file:
-            for line in file.readline():
+            for line in file:
+
                 i = line.find(";")
                 self.codingTable[line[0:i]] = line[i+1:]
                 self.decodingTable[line[i+1:]] = line[0:]
@@ -92,9 +93,11 @@ class Decrypting:
         self.entropy = []
         self.q = 0
         with open(entropy_file) as file:
-            for line in file.readline():
-                self.entropy.append(line)
-                self.q = self.q +1
+            for line in file:
+                if line != '\n':
+                    self.entropy.append(line[:-1])
+                    self.q = self.q +1
+        print self.entropy
 
     def decryptOneSign(self, n, q ):
 
@@ -108,9 +111,10 @@ class Decrypting:
                 result = self.M2.xorBait(m,m1)
                 print result
                 print "czesc"
+                #print self.codingTable
                 for j in range(0, q):
                     s = self.entropy[j]
-                    print "hej"
+                    #print s
                     if s in self.decodingTable:
                         c = self.M2.intToBait(s)
                         binaryR = self.M2.xorBait(result,c)
