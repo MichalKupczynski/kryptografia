@@ -21,14 +21,15 @@ class ModuloTwo:
         return s
 
     def intToBait(self, i):
-        bait =  "{0:b}".format(i)
+        bait =  "{0:b}".format(int(i))
         for i in range(0,8-len(bait)):
             bait = "0"+bait
-
+        return bait
 
     def baitToInt(self, bait):
-        i = int(bait)
-
+        print bait
+        i = int(bait,2)
+        return i
 
 
 class Cryptograms:
@@ -87,8 +88,8 @@ class Decrypting:
             for line in file:
 
                 i = line.find(";")
-                self.codingTable[line[0:i]] = line[i+1:]
-                self.decodingTable[line[i+1:]] = line[0:]
+                self.codingTable[line[0:i]] = line[i+1:-1]
+                self.decodingTable[line[i+1:-1]] = line[0:i]
 
         self.entropy = []
         self.q = 0
@@ -109,16 +110,14 @@ class Decrypting:
                 #print m1
                 #print "czesc"
                 result = self.M2.xorBait(m,m1)
-                print result
-                print "czesc"
                 #print self.codingTable
                 for j in range(0, q):
                     s = self.entropy[j]
-                    #print s
                     if s in self.decodingTable:
-                        c = self.M2.intToBait(s)
+                        #print s
+                        c = self.M2.intToBait(self.decodingTable[s])
                         binaryR = self.M2.xorBait(result,c)
-                        R = self.M2.baitToInt(binaryR)
+                        R = str(self.M2.baitToInt(binaryR))
                         if R in self.codingTable:
                             if R in propositions:
                                 propositions[R] = propositions[R] +1
@@ -127,7 +126,9 @@ class Decrypting:
             except:
                 pass
         print propositions
-        max = sorted(propositions.iteritems(), key = lambda (k,v): v, reverse = True)[0]
+        if propositions == {}:
+            return self.decodingTable[self.entropy[0]]
+        max = sorted(propositions.iteritems(), key = lambda (k,v): v, reverse = True)[0][0]
         print max
         return max
 
@@ -136,9 +137,9 @@ class Decrypting:
         Result = str()
         i = 0
         for s in self.cryptograms.text:
-            Result = Result + self.decryptOneSign(i, self.q)
+            Result = Result + self.codingTable[self.decryptOneSign(i, self.q)]
             i = i+1
-        with open(result) as file:
+        with open(result,"w") as file:
             file.write(Result)
 
 if __name__ == "__main__":
