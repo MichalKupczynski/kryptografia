@@ -13,9 +13,6 @@ class ModuloTwo:
     def xorBait(self, a, b):
 
         s = str()
-        print "a" +a
-        print "b" + b
-        print len(a)
         for i in range(0, len(a)):
             s = s + self.xor(a[i], b[i])
         return s
@@ -27,7 +24,6 @@ class ModuloTwo:
         return bait
 
     def baitToInt(self, bait):
-        print bait
         i = int(bait,2)
         return i
 
@@ -124,11 +120,9 @@ class Decrypting:
                             propositions[R] = 1
             except:
                 pass
-        print propositions
         if propositions == {}:
             return self.decodingTable[self.entropy[0]]
         max = sorted(propositions.iteritems(), key = lambda (k,v): v, reverse = True)[0][0]
-        print max
         return max
 
     def decryptMessage(self, result):
