@@ -56,7 +56,7 @@ class Cryptograms:
 
         cryptogram = []
         name = baseName + str(n)
-        print name
+        # print name
         with open(name) as file:
             tmp = file.read()
         tempString = str()
@@ -94,51 +94,72 @@ class Decrypting:
                 if line != '\n':
                     self.entropy.append(line[:-1])
                     self.q = self.q +1
-        print self.entropy
+        #print self.entropy
 
-    def decryptOneSign(self, n, q ):
+    def decryptMessage(self,file, n, q):
+        result = []
+        p = {}
+        for i in range(0,len(self.cryptograms.text)):
+            result.append({"0":0})
+        rold = []
 
-        propositions = {}
-        m = self.cryptograms.text[n]
-        for i in range(0, self.cryptograms.numberOfCryptograms):
+        for i in range(0, n):
+            #print self.cryptograms.cryptograms[k][n]
+            r = []
+            p = {}
+            m = self.cryptograms.cryptograms[i]
+            L = i%n
+            rold = []
+            for k in range(0,len(cryptograms.text)):
+                rold.append(self.M2.xorBait(m[k],self.cryptograms.cryptograms[L][k] ))
+
+            for j in range(0, len(self.cryptograms.text)):
+                r.append(self.M2.xorBait(m[j],self.cryptograms.text[j] ))
+            for j in range(0,q):
+                s =   str(self.M2.intToBait(self.decodingTable[self.entropy[j]]))
+                for k in range(0, len(self.cryptograms.text)):
+                        tmp = self.M2.xorBait(r[k],s )
+                        if str(self.M2.baitToInt(tmp)) in self.codingTable:
+                            if self.M2.xorBait(rold[k],s) != tmp:
+                                if tmp in result[k]:
+                                    result[k][tmp] = result[k][tmp] + 1
+                                else:
+                                    result[k][tmp] = 1
+                                #print p
+                                '''if r[k] in p:
+                                    if tmp in p[r[k]]:
+                                        p[r[k]][tmp] = p[r[k]][tmp] +1
+                                    else:
+                                        p[r[k]][tmp] = 1
+                                else:
+                                    p[r[k]] = {}
+                                    p[r[k]][tmp] = 1'''
+
+
+        print result[5]
+        Result = str()
+
+        for r in result:
             try:
-                m1 = self.cryptograms.cryptograms[i][n]
-
-
-                result = self.M2.xorBait(m,m1)
-
-                for j in range(0, q):
-                    s = self.entropy[j]
-                    #print s
-                    c = self.M2.intToBait(self.decodingTable[s])
-                    binaryR = self.M2.xorBait(result,c)
-                    R = str(self.M2.baitToInt(binaryR))
-                    if R in self.codingTable:
-                        if R in propositions:
-                            propositions[R] = propositions[R] +1
-                        else:
-                            propositions[R] = 1
+                Result = Result + self.codingTable[str(self.M2.baitToInt(sorted(r.iteritems(),key = lambda (k,v): v,reverse=True)[0][0]))]
             except:
                 pass
-        if propositions == {}:
-            return self.decodingTable[self.entropy[0]]
-        max = sorted(propositions.iteritems(), key = lambda (k,v): v, reverse = True)[0][0]
-        return max
+                '''
+        for t in self.cryptograms.text:
+            try:
+                Result = Result + self.codingTable[str(self.M2.baitToInt(sorted(p[t].iteritems(),key = lambda (k,v): v,reverse=True)[0][0]))]
+            except:
+                pass'''
 
-    def decryptMessage(self, result):
 
-        Result = str()
-        i = 0
-        for s in self.cryptograms.text:
-            Result = Result + self.codingTable[self.decryptOneSign(i, self.q)]
-            i = i+1
-        with open(result,"w") as file:
+
+        with open(file,"w") as file:
             file.write(Result)
 
 if __name__ == "__main__":
 
     cryptograms = Cryptograms(20)
     decrypting = Decrypting(cryptograms, "kodowanie", "entropia")
-    decrypting.decryptMessage("odczytany")
+    decrypting.decryptMessage("odczytany",19,7)
 
 
