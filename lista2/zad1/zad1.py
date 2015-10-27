@@ -82,8 +82,9 @@ class Decrypting:
         self.decodingTable = {}
         with open(coding) as file:
             for line in file:
-
+                print line
                 i = line.find(";")
+                print "a" + line[0:i] + "a"
                 self.codingTable[line[0:i]] = line[i+1:-1]
                 self.decodingTable[line[i+1:-1]] = line[0:i]
 
@@ -94,8 +95,8 @@ class Decrypting:
                 if line != '\n':
                     self.entropy.append(line[:-1])
                     self.q = self.q +1
-        #print self.entropy
-
+        print self.entropy
+        print self.codingTable
     def decryptMessage(self,file, n, q):
         result = []
         p = {}
@@ -120,7 +121,7 @@ class Decrypting:
                 for k in range(0, len(self.cryptograms.text)):
                         tmp = self.M2.xorBait(r[k],s )
                         if str(self.M2.baitToInt(tmp)) in self.codingTable:
-                            if self.M2.xorBait(rold[k],s) != tmp:
+                            if str(self.M2.baitToInt(self.M2.xorBait(rold[k],s))) in self.codingTable: # c_1+c+e=t, c_1+c_2+e={}
                                 if tmp in result[k]:
                                     result[k][tmp] = result[k][tmp] + 1
                                 else:
@@ -160,6 +161,6 @@ if __name__ == "__main__":
 
     cryptograms = Cryptograms(20)
     decrypting = Decrypting(cryptograms, "kodowanie", "entropia")
-    decrypting.decryptMessage("odczytany",19,7)
+    decrypting.decryptMessage("odczytany",19,50)
 
 
