@@ -61,103 +61,53 @@ class Cryptograms:
                 tempString = tempString + char
                 i +=1
             if i == 8:
-                self.text.append(tempString)
+                self.text.append(int(tempString,2))
                 tempString = str()
                 i = 0
         #print self.text
-        #self.hexText = hex(self.text[0])
-        #for t in self.text[1:]:
-        #    self.hexText = self.hexText+ hex(t)
-        #print self.hexText
+        self.hexText = hex(self.text[0])
+        for t in self.text[1:]:
+            self.hexText = self.hexText+ hex(t)
+            #print self.hexText
 
 if __name__ == "__main__":
-
-    with open("klucz") as k:
-        key = k.read()[:-1]
-
-    #key = "00000000" + key
-    #k = hex(key)
-    #print key
     entropy = []
     with open("znaki") as file:
         for line in file:
             if line != '\n':
                 entropy.append(line[:-1])
+
     print entropy
-    t = 1
-    '''Keys1 = []
-    for i in range(0,256):
-        Keys1.append(i)
-        print i'''
 
-
-    tkey = 0
-    Key = [0,0,0,0]
-    #print Key
-    for k in key:
-
-        tkey = tkey + int(k,16)*pow(16,t)
-        t = t -1
-        if t == -1:
-            Key.append(tkey)
-            tkey = 0
-            t = 1
-    print Key
-    cryptogram = Cryptograms()
-    '''
-    print Key
-    print Key
-    Crypto = ARC4.ARC4Cipher(Key)
-    print Crypto.decrypt(cryptogram.hexText)
-    '''
-
-    #for k in Key:
-
-    KeyStr = RC4(Key)
-
-
-
-    cryptogram = Cryptograms()
-    #print cryptogram.text
+    with open("klucz") as k:
+        Key = k.read()[:-1]
+    prep = []
+    start = "00000000"
+    key = start + Key
+    key = hex(int(key,16))
+    #k = hex(key)
+    #print key
     var = True
+    cryptogram = Cryptograms()
     while var:
-        Key[0] = random.randint(0, 255)
-        Key[1] = random.randint(0, 255)
-        Key[2] = random.randint(0, 255)
-        Key[3] = random.randint(0, 255)
-        KeyStr = RC4(Key)
-        Result = []
-        for c in cryptogram.text:
+        s = random.randint(0,pow(2,32))
+        if s in prep:
+            continue
+        else:
+            prep.append(s)
+        start = hex(s)[2:]
+        print start
+        key = start + Key
+        key = hex(int(key,16))
 
-            #print k
-            #print c
-            k = next(KeyStr)
-            #print "klucz"
-            tray = chr(int(xorBait(k,c),2))
-
-            test = False
-            for z in entropy:
-                if z == tray:
-                    test = True
-                    break
-            if not test:
+        Crypto = ARC4.ARC4Cipher(key)
+        for c in Crypto.decrypt(cryptogram.hexText):
+            print c
+            if not(c in entropy):
                 break
+            else:
+                continue
+            var = False
+    print Crypto.decrypt(cryptogram.hexText)
 
-            Result.append(tray)
-            #print k
-        #print(Result)
-        if len(Result) == len(cryptogram.text):
-            break
-            var =  False
-    print Result
 
-    '''
-    with open("result","w") as file:
-        p = str()
-        for r in Result:
-
-            try:
-                print chr( int(r,2))
-            except:
-                print "fafaf"
-            file.write(chr( int(r,2)))'''
