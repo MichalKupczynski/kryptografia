@@ -1,4 +1,5 @@
-
+from Crypto.Cipher import ARC4
+import random
 
 def xor( a, b):
     if a == b:
@@ -63,16 +64,36 @@ class Cryptograms:
                 self.text.append(tempString)
                 tempString = str()
                 i = 0
+        #print self.text
+        #self.hexText = hex(self.text[0])
+        #for t in self.text[1:]:
+        #    self.hexText = self.hexText+ hex(t)
+        #print self.hexText
 
 if __name__ == "__main__":
 
     with open("klucz") as k:
         key = k.read()[:-1]
-    print key
 
-    Key=[]
+    #key = "00000000" + key
+    #k = hex(key)
+    #print key
+    entropy = []
+    with open("znaki") as file:
+        for line in file:
+            if line != '\n':
+                entropy.append(line[:-1])
+    print entropy
     t = 1
+    '''Keys1 = []
+    for i in range(0,256):
+        Keys1.append(i)
+        print i'''
+
+
     tkey = 0
+    Key = [0,0,0,0]
+    #print Key
     for k in key:
 
         tkey = tkey + int(k,16)*pow(16,t)
@@ -81,24 +102,56 @@ if __name__ == "__main__":
             Key.append(tkey)
             tkey = 0
             t = 1
-    Key.append(0)
-    Key.append(0)
-    Key.append(0)
-    Key.append(0)
     print Key
+    cryptogram = Cryptograms()
+    '''
+    print Key
+    print Key
+    Crypto = ARC4.ARC4Cipher(Key)
+    print Crypto.decrypt(cryptogram.hexText)
+    '''
+
+    #for k in Key:
 
     KeyStr = RC4(Key)
 
-    Result = []
+
 
     cryptogram = Cryptograms()
-    print cryptogram.text
-    for c in cryptogram.text:
-        k = next(KeyStr)
-        #print "klucz"
-        Result.append(xorBait(k,c))
-        #print k
+    #print cryptogram.text
+    var = True
+    while var:
+        Key[0] = random.randint(0, 255)
+        Key[1] = random.randint(0, 255)
+        Key[2] = random.randint(0, 255)
+        Key[3] = random.randint(0, 255)
+        KeyStr = RC4(Key)
+        Result = []
+        for c in cryptogram.text:
 
+            #print k
+            #print c
+            k = next(KeyStr)
+            #print "klucz"
+            tray = chr(int(xorBait(k,c),2))
+
+            test = False
+            for z in entropy:
+                if z == tray:
+                    test = True
+                    break
+            if not test:
+                break
+
+            Result.append(tray)
+            #print k
+        #print(Result)
+        if len(Result) == len(cryptogram.text):
+            break
+            var =  False
+    print Result
+
+    '''
     with open("result","w") as file:
         p = str()
         for r in Result:
@@ -107,4 +160,4 @@ if __name__ == "__main__":
                 print chr( int(r,2))
             except:
                 print "fafaf"
-            file.write(chr( int(r,2)))
+            file.write(chr( int(r,2)))'''
