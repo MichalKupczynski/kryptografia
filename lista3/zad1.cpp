@@ -53,20 +53,26 @@
         
 int main(int argc, char* argv[])
 {
-	FILE * out;
 	FILE *in;
-	FILE *result;
-	in = fopen("dane", "r");
-	out = fopen("wynik", "w");
-	int p;
-    p =  do_crypt(in, out, 1);
-	std::cout << p ;
+	FILE *out;
+	std::cout <<argc;
+	if (argc <4)
+		return 1;
+	
+	const char * Data = argv[1];
+	const char* Result = argv[2];
+	const char* option = argv[3];
+	in = fopen(Data, "r");
+	out = fopen(Result, "w");
+	int p = 1;
+	std::cout << option;
+	if (!std::string(option).compare("-d"))
+		p = 0;
+	std::cout <<p;
+    do_crypt(in, out, p);
+
 	fclose(in);
 	fclose(out);
 
-	in = fopen("wynik", "r");
-	result = fopen("rozszyforwany", "w");
-	do_crypt(in, result,0);
-	//system("openssl aes-256-cbc -d -in out.enc -out m");
 	return 0;
 }
