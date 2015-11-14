@@ -13,7 +13,7 @@ unsigned char * AesFileEnc::key ( )
 	FILE* keystore;
 	keystore = fopen(this->keystore_path, "rw");
 	unsigned char *iv = this->iv(32);
-	unsigned char* key = new unsigned char[32];
+	/*unsigned char* key = new unsigned char[32];
 	const char * prompt;
 	getpass( prompt );
 	
@@ -21,7 +21,7 @@ unsigned char * AesFileEnc::key ( )
    SHA256(reinterpret_cast<const unsigned char*>(prompt), 32, sha);
 	delete prompt;
 	
-	  /* Initialise the library */
+
   ERR_load_crypto_strings();
   OpenSSL_add_all_algorithms();
   OPENSSL_config(NULL);
@@ -31,20 +31,21 @@ unsigned char * AesFileEnc::key ( )
 		keystore = fopen(this->keystore_path, "rw+");
 		srand(time(0));
 		int j;
+		char *buffer;
+		buffer = new char;
 		for(int i = 0 ; i<32; i++)
 		{
 			j = (int)(rand() / (RAND_MAX + 1.0) * 16);		
-			char *buffer;
 			sprintf(buffer,"%x",j);
 			key[i] = *buffer;
 		}
+		 delete buffer;
 
   unsigned char ciphertext[512];
 
   int ciphertext_len;
 
 
-  /* Encrypt the plaintext */
   ciphertext_len = this->encrypt (key, 32, sha, iv,
                             ciphertext);
 	
@@ -59,13 +60,13 @@ else{
   int decryptedtext_len;
   
 
-  /* Decrypt the ciphertext */
+
   decryptedtext_len = decrypt(keycipher, ciphertext_len, sha, iv,
     decryptedtext);
 
   key = ( unsigned char *)decryptedtext;
 }
-  /* Clean up */
+
   EVP_cleanup();
   ERR_free_strings();
   unsigned char* KEY = new unsigned char[this->keyLength];
@@ -73,9 +74,9 @@ else{
 	KEY[i] = key[i];
 
   delete(key);
-  delete(sha);
+  delete(sha);*/
   
-  return KEY;
+  return NULL;
 	}
 	
 unsigned char* AesFileEnc::iv ( )
@@ -83,15 +84,18 @@ unsigned char* AesFileEnc::iv ( )
 	unsigned char * IV;
 	IV = new unsigned char[this->keyLength];
 	srand(time(0));
-	int j;
+	int j;	
+	char *buffer;
+	buffer = new char;
 	for(int i = 0 ; i<this->keyLength; i++)
 	{
 		j = (int)(rand() / (RAND_MAX + 1.0) * 16);
 		
-		char *buffer;
+
 		sprintf(buffer,"%x",j);
 		IV[i] = *buffer;
 	}
+	delete buffer;
 	return IV;
 }
 unsigned char* AesFileEnc::iv (int keyLength )
@@ -100,14 +104,18 @@ unsigned char* AesFileEnc::iv (int keyLength )
 	IV = new unsigned char[keyLength];
 	srand(time(0));
 	int j;
+	char *buffer;
+	buffer = new char;
 	for(int i = 0 ; i< keyLength; i++)
 	{
-		j = (int)(rand() / (RAND_MAX + 1.0) * 16);
-		
-		char *buffer;
-		sprintf(buffer,"%x",j);
+		j = (int)(rand() / (RAND_MAX +1.0) * 16);
+		std::cout <<j<<std::endl;
+
+		sprintf(buffer, "%x",j);
 		IV[i] = *buffer;
+		
 	}
+	delete buffer;
 	return IV;
 }
 	
@@ -163,16 +171,13 @@ int AesFileEnc::do_crypt(FILE *in, FILE *out, int do_encrypt)
 	unsigned char inbuf[1024], outbuf[1024 + EVP_MAX_BLOCK_LENGTH];
 	int inlen, outlen;
 	EVP_CIPHER_CTX ctx;
-	/* Bogus key and IV: we'd normally set these from
-	* another source.
-	*/
-	unsigned char *key = this->key();
-	unsigned char *iv = this->iv();
 
-	/* Don't set key or IV right away; we want to check lengths */
+	std::cout << "tutaj";
+	unsigned char *key = this->key();
+	/*unsigned char *iv = this->iv();
+	
 	EVP_CIPHER_CTX_init(&ctx);
-	//EVP_CipherInit_ex(&ctx, EVP_aes_128_cbc(), NULL, NULL, NULL,
-	//	do_encrypt);
+
 			
 	OPENSSL_assert(EVP_CIPHER_CTX_key_length(&ctx) == this->keyLength);
 	OPENSSL_assert(EVP_CIPHER_CTX_iv_length(&ctx) == this->keyLength);
@@ -229,7 +234,7 @@ int AesFileEnc::do_crypt(FILE *in, FILE *out, int do_encrypt)
 			break;
 	}
 
-			/* Now we can set key and IV */
+
 			EVP_CipherInit_ex(&ctx, NULL, NULL, key, iv, do_encrypt);
 
 			for(;;)
@@ -238,7 +243,7 @@ int AesFileEnc::do_crypt(FILE *in, FILE *out, int do_encrypt)
 					if(inlen <= 0) break;
 					if(!EVP_CipherUpdate(&ctx, outbuf, &outlen, inbuf, inlen))
 							{
-							/* Error */
+	
 							EVP_CIPHER_CTX_cleanup(&ctx);
 							return 0;
 							}
@@ -246,13 +251,13 @@ int AesFileEnc::do_crypt(FILE *in, FILE *out, int do_encrypt)
 					}
 			if(!EVP_CipherFinal_ex(&ctx, outbuf, &outlen))
 					{
-					/* Error */
+
 					EVP_CIPHER_CTX_cleanup(&ctx);
 					return 0;
 					}
 			fwrite(outbuf, 1, outlen, out);
 
-			EVP_CIPHER_CTX_cleanup(&ctx);
+			EVP_CIPHER_CTX_cleanup(&ctx);*/
 			return 1;
 			}
 int AesFileEnc::encrypt(unsigned char *plaintext, int plaintext_len, unsigned char *key,
