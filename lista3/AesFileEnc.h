@@ -24,10 +24,12 @@ class AesFileEnc{
 	private:
 		Aes_type type;
 		const char* keystore_path;
+		unsigned int keyLength;
+		unsigned char * key ( );
+		unsigned char * iv ( );
 
 	public:	
 		AesFileEnc(Aes_type type, const char* keystore_path);
 		int do_crypt(FILE *in, FILE *out, int do_encrypt);
-		unsigned char * key ( );
-		unsigned char * iv ( );
+
 };
