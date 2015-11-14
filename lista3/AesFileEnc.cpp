@@ -1,6 +1,9 @@
 #include <openssl/conf.h>
 #include <openssl/evp.h>
 #include <openssl/err.h>
+#include <stdlib.h>
+#include <time.h>
+
 #include "AesFileEnc.h"	
 unsigned char * AesFileEnc::key ( )
 {
@@ -10,7 +13,19 @@ unsigned char * AesFileEnc::key ( )
 	
 unsigned char* AesFileEnc::iv ( )
 {
-	
+	unsigned char * IV;
+	IV = new unsigned char[this->keyLength];
+	srand(time(0));
+	int j;
+	for(int i = 0 ; i<this->keyLength; i++)
+	{
+		j = (int)(rand() / (RAND_MAX + 1.0) * 16);
+		
+		char *buffer;
+		itoa(j, buffer, 16);
+		IV[i] = *buffer;
+	}
+	return IV;
 	}
 	
 AesFileEnc::AesFileEnc(Aes_type type, const char* keystore_path)
