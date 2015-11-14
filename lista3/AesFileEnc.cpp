@@ -13,11 +13,11 @@ unsigned char * AesFileEnc::key ( )
 	FILE* keystore;
 	keystore = fopen(this->keystore_path, "rw");
 	unsigned char *iv = this->iv(32);
-	/*unsigned char* key = new unsigned char[32];
-	const char * prompt;
-	getpass( prompt );
-	
-	unsigned char* sha;
+	unsigned char* key = new unsigned char[32];
+	const char *prompt;
+	prompt = getpass("Your password to keystore: " );
+	std::cout<<prompt;
+	/*unsigned char* sha;
    SHA256(reinterpret_cast<const unsigned char*>(prompt), 32, sha);
 	delete prompt;
 	
@@ -109,8 +109,6 @@ unsigned char* AesFileEnc::iv (int keyLength )
 	for(int i = 0 ; i< keyLength; i++)
 	{
 		j = (int)(rand() / (RAND_MAX +1.0) * 16);
-		std::cout <<j<<std::endl;
-
 		sprintf(buffer, "%x",j);
 		IV[i] = *buffer;
 		
