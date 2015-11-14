@@ -1,14 +1,81 @@
 #include <openssl/conf.h>
 #include <openssl/evp.h>
 #include <openssl/err.h>
+#include <openssl/sha.h>
 #include <stdlib.h>
 #include <time.h>
-
+#include <unistd.h>
+#include <cstdlib>
 #include "AesFileEnc.h"	
+
 unsigned char * AesFileEnc::key ( )
 {
+	FILE* keystore;
+	keystore = fopen(this->keystore_path, "rw");
+	unsigned char *iv = this->iv(32);
+	unsigned char* key = new unsigned char[32];
+	const char * prompt;
+	getpass( prompt );
+	
+	unsigned char* sha;
+   SHA256(reinterpret_cast<const unsigned char*>(prompt), 32, sha);
+	delete prompt;
+	
+	  /* Initialise the library */
+  ERR_load_crypto_strings();
+  OpenSSL_add_all_algorithms();
+  OPENSSL_config(NULL);
+  
+	if(keystore == NULL)
+	{
+		keystore = fopen(this->keystore_path, "rw+");
+		srand(time(0));
+		int j;
+		for(int i = 0 ; i<32; i++)
+		{
+			j = (int)(rand() / (RAND_MAX + 1.0) * 16);		
+			char *buffer;
+			sprintf(buffer,"%x",j);
+			key[i] = *buffer;
+		}
+
+  unsigned char ciphertext[512];
+
+  int ciphertext_len;
+
+
+  /* Encrypt the plaintext */
+  ciphertext_len = this->encrypt (key, 32, sha, iv,
+                            ciphertext);
 	
 	
+	fprintf(keystore, "%s" ,(const char *)ciphertext);
+}
+else{
+
+  unsigned char decryptedtext[512];
+  unsigned char keycipher[512];
+  int ciphertext_len = fscanf (keystore, "%s", keycipher);
+  int decryptedtext_len;
+  
+
+  /* Decrypt the ciphertext */
+  decryptedtext_len = decrypt(keycipher, ciphertext_len, sha, iv,
+    decryptedtext);
+
+  key = ( unsigned char *)decryptedtext;
+}
+  /* Clean up */
+  EVP_cleanup();
+  ERR_free_strings();
+  unsigned char* KEY = new unsigned char[this->keyLength];
+  for(int i =0; i<this->keyLength; i++)
+	KEY[i] = key[i];
+
+  delete(key);
+  delete(sha);
+  
+  return KEY;
 	}
 	
 unsigned char* AesFileEnc::iv ( )
@@ -22,11 +89,27 @@ unsigned char* AesFileEnc::iv ( )
 		j = (int)(rand() / (RAND_MAX + 1.0) * 16);
 		
 		char *buffer;
-		itoa(j, buffer, 16);
+		sprintf(buffer,"%x",j);
 		IV[i] = *buffer;
 	}
 	return IV;
+}
+unsigned char* AesFileEnc::iv (int keyLength )
+{
+	unsigned char * IV;
+	IV = new unsigned char[keyLength];
+	srand(time(0));
+	int j;
+	for(int i = 0 ; i< keyLength; i++)
+	{
+		j = (int)(rand() / (RAND_MAX + 1.0) * 16);
+		
+		char *buffer;
+		sprintf(buffer,"%x",j);
+		IV[i] = *buffer;
 	}
+	return IV;
+}
 	
 AesFileEnc::AesFileEnc(Aes_type type, const char* keystore_path)
 {
@@ -73,7 +156,7 @@ AesFileEnc::AesFileEnc(Aes_type type, const char* keystore_path)
 			break;
 	}
 }
-	
+
 int AesFileEnc::do_crypt(FILE *in, FILE *out, int do_encrypt)
 {
 	/* Allow enough space in output buffer for additional block */
@@ -83,16 +166,16 @@ int AesFileEnc::do_crypt(FILE *in, FILE *out, int do_encrypt)
 	/* Bogus key and IV: we'd normally set these from
 	* another source.
 	*/
-	unsigned char key[] = this->key();
-	unsigned char iv[] = this->iv();
+	unsigned char *key = this->key();
+	unsigned char *iv = this->iv();
 
 	/* Don't set key or IV right away; we want to check lengths */
 	EVP_CIPHER_CTX_init(&ctx);
 	//EVP_CipherInit_ex(&ctx, EVP_aes_128_cbc(), NULL, NULL, NULL,
 	//	do_encrypt);
 			
-	OPENSSL_assert(EVP_CIPHER_CTX_key_length(&ctx) == this->keyLenght);
-	OPENSSL_assert(EVP_CIPHER_CTX_iv_length(&ctx) == this->keyLenght);
+	OPENSSL_assert(EVP_CIPHER_CTX_key_length(&ctx) == this->keyLength);
+	OPENSSL_assert(EVP_CIPHER_CTX_iv_length(&ctx) == this->keyLength);
 	switch(this->type)
 	{
 		case cbc128:
@@ -145,10 +228,6 @@ int AesFileEnc::do_crypt(FILE *in, FILE *out, int do_encrypt)
 				do_encrypt);
 			break;
 	}
-	
-
-	
-
 
 			/* Now we can set key and IV */
 			EVP_CipherInit_ex(&ctx, NULL, NULL, key, iv, do_encrypt);
@@ -176,4 +255,87 @@ int AesFileEnc::do_crypt(FILE *in, FILE *out, int do_encrypt)
 			EVP_CIPHER_CTX_cleanup(&ctx);
 			return 1;
 			}
+int AesFileEnc::encrypt(unsigned char *plaintext, int plaintext_len, unsigned char *key,
+  unsigned char *iv, unsigned char *ciphertext)
+{
+  EVP_CIPHER_CTX *ctx;
 
+  int len;
+
+  int ciphertext_len;
+
+  /* Create and initialise the context */
+  if(!(ctx = EVP_CIPHER_CTX_new())) this->handleErrors();
+
+  /* Initialise the encryption operation. IMPORTANT - ensure you use a key
+   * and IV size appropriate for your cipher
+   * In this example we are using 256 bit AES (i.e. a 256 bit key). The
+   * IV size for *most* modes is the same as the block size. For AES this
+   * is 128 bits */
+  if(1 != EVP_EncryptInit_ex(ctx, EVP_aes_256_cbc(), NULL, key, iv))
+    handleErrors();
+
+  /* Provide the message to be encrypted, and obtain the encrypted output.
+   * EVP_EncryptUpdate can be called multiple times if necessary
+   */
+  if(1 != EVP_EncryptUpdate(ctx, ciphertext, &len, plaintext, plaintext_len))
+    handleErrors();
+  ciphertext_len = len;
+
+  /* Finalise the encryption. Further ciphertext bytes may be written at
+   * this stage.
+   */
+  if(1 != EVP_EncryptFinal_ex(ctx, ciphertext + len, &len)) handleErrors();
+  ciphertext_len += len;
+
+  /* Clean up */
+  EVP_CIPHER_CTX_free(ctx);
+
+  return ciphertext_len;
+}
+
+int AesFileEnc::decrypt(unsigned char *ciphertext, int ciphertext_len, unsigned char *key,
+  unsigned char *iv, unsigned char *plaintext)
+{
+  EVP_CIPHER_CTX *ctx;
+
+  int len;
+
+  int plaintext_len;
+
+  /* Create and initialise the context */
+  if(!(ctx = EVP_CIPHER_CTX_new())) handleErrors();
+
+  /* Initialise the decryption operation. IMPORTANT - ensure you use a key
+   * and IV size appropriate for your cipher
+   * In this example we are using 256 bit AES (i.e. a 256 bit key). The
+   * IV size for *most* modes is the same as the block size. For AES this
+   * is 128 bits */
+  if(1 != EVP_DecryptInit_ex(ctx, EVP_aes_256_cbc(), NULL, key, iv))
+    handleErrors();
+
+  /* Provide the message to be decrypted, and obtain the plaintext output.
+   * EVP_DecryptUpdate can be called multiple times if necessary
+   */
+  if(1 != EVP_DecryptUpdate(ctx, plaintext, &len, ciphertext, ciphertext_len))
+    handleErrors();
+  plaintext_len = len;
+
+  /* Finalise the decryption. Further plaintext bytes may be written at
+   * this stage.
+   */
+  if(1 != EVP_DecryptFinal_ex(ctx, plaintext + len, &len)) handleErrors();
+  plaintext_len += len;
+
+  /* Clean up */
+  EVP_CIPHER_CTX_free(ctx);
+
+  return plaintext_len;
+}
+
+
+void AesFileEnc::handleErrors()
+{
+  ERR_print_errors_fp(stderr);
+  abort();
+}
