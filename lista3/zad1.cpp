@@ -16,7 +16,6 @@ int main(int argc, char* argv[])
 	const char* keystore_path = argv[3];
 	const char* option = argv[4];
 	type = cbc128;
-	std::cout<<argv[5];
 	if(argc >=5)
 	{
 		std::string stype = std::string(argv[5]);
@@ -54,10 +53,8 @@ int main(int argc, char* argv[])
 	out = fopen(Result, "w");
 	int p = 1;
 
-	std::cout << option;
 	if (!std::string(option).compare("-d"))
 		p = 0;
-	std::cout <<p;
 	AesFileEnc Aes(type,keystore_path);
     Aes.do_crypt(in, out, p);
 
