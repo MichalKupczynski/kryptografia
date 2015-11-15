@@ -8,6 +8,13 @@ using std::cout;
 using std::cin;
 using std::string;
 
+struct configuration
+{
+	std::string sha1;
+	std:string sha2;
+	std::string keystore_path;
+};
+
 int play()
 {
 string sciezka;
@@ -33,11 +40,12 @@ do
 	return 1;
 }
 
-void config(AesFIleEnc enc)
+configuration config(AesFIleEnc enc)
 {
 	FILE* config;
 	config = fopen("config", "r");
 	unsigned char key[] = "a58f8b91c230fe83"
+	configuration conf;
 	if(config == NULL)
 	{
 		config = fopen("config", "r+");
@@ -46,6 +54,7 @@ void config(AesFIleEnc enc)
 		std::string path;
 		cout<<"Podaj ścieżkę do keystora: "<<endl;
 		cin>>path;
+		conf.keystore_path = path;
 		std::string prompt;
 		prompt = getpass("Podaj swoje hasło: " );
 		fscanf(config,"%s \n", path);
@@ -65,10 +74,38 @@ void config(AesFIleEnc enc)
 		}
 		sha1 = SHA256(pass1, 32, NULL);
 		sha2 = SHA256(pass2, 32, NULL);
+		conf.sha1 =sha1;
+		conf.sha2 = sha2;
 		fscanf(config,"%s \n", sha1);
 		fscanf(config,"%s \n", sha2);
 
 		encdo_crypt(config, config, 1, unsigned char* key);
+		return conf;
 	}
+	else{
+	
+		std::string prompt;
+		prompt = getpass("Podaj swoje hasło: " );
+		fscanf(config,"%s \n", path);
+		char pass1[256];
+		char pass2[256];
+		for(int i = 0; i<255;i++)
+		{
+			pass1[i]= "0";
+			pass2[i] = "0";
+		}
+		pass1[255] = "0";
+		pass2[255] = "1";
+		for(int i = 0; i<prompt.size();i++)
+		{
+			pass1[i]= prompt.substring(i,1);
+			pass2[i] = prompt.substring(i,1);
+		}
+		sha1 = SHA256(pass1, 32, NULL);
+		sha2 = SHA256(pass2, 32, NULL);
+				char pass1[256];
+		char pass2[256];
+		
 		encdo_crypt(config, config, 0, unsigned char* key);
+	}
 	}
