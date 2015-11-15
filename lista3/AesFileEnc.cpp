@@ -93,31 +93,11 @@ else{
   return KEY;
 	}
 	
-unsigned char* AesFileEnc::iv ( )
-{
-	unsigned char * IV;
-	IV = new unsigned char[this->keyLength];
-	IV[this->keyLength] = '\0';
-	srand(time(0));
-	int j;	
-	char *buffer;
-	buffer = new char;
-	for(int i = 0 ; i<this->keyLength; i++)
-	{
-		j = (int)(rand() / (RAND_MAX + 1.0) * 16);
-		
-
-		sprintf(buffer,"%x",i);
-		IV[i] = *buffer;
-	}
-	delete buffer;
-	return IV;
-}
 unsigned char* AesFileEnc::iv (int keyLength )
 {
 	unsigned char * IV;
 	IV = new unsigned char[keyLength];
-	IV[this->keyLength] = '\0';
+	IV[keyLength] = '\0';
 	srand(time(0));
 	int j;
 	char *buffer;
@@ -125,7 +105,7 @@ unsigned char* AesFileEnc::iv (int keyLength )
 	for(int i = 0 ; i< keyLength; i++)
 	{
 		j = (int)(rand() / (RAND_MAX +1.0) * 16);
-		sprintf(buffer, "%x",i);
+		sprintf(buffer, "%x",i%16);
 		IV[i] = *buffer;
 		
 	}
@@ -191,15 +171,14 @@ int AesFileEnc::do_crypt(FILE *in, FILE *out, int do_encrypt)
 	//	std::cout <<key<<std::endl;
 	//unsigned char key[] = "0123456789abcdeF";
 	std::cout <<key<< std::endl;
-	unsigned char *iv = this->iv();
-		std::cout <<iv<<std::endl;
+
+
 	//unsigned char iv[] = "1234567887654321";
 	EVP_CIPHER_CTX_init(&ctx);
-			
+	
 	switch(this->type)
 	{
 		case cbc128:
-			std::cout << "TUTU";
 			EVP_CipherInit_ex(&ctx, EVP_aes_128_cbc(), NULL, NULL, NULL,
 				do_encrypt);
 			break;
@@ -249,9 +228,11 @@ int AesFileEnc::do_crypt(FILE *in, FILE *out, int do_encrypt)
 				do_encrypt);
 			break;
 	}
-
+	unsigned char *iv = this->iv(EVP_CIPHER_CTX_iv_length(&ctx));	
+			std::cout<< this->keyLength << std::endl;
+			std::cout<< EVP_CIPHER_CTX_iv_length(&ctx) <<std::endl;
 			OPENSSL_assert(EVP_CIPHER_CTX_key_length(&ctx) == this->keyLength);
-			OPENSSL_assert(EVP_CIPHER_CTX_iv_length(&ctx) == this->keyLength);
+			//OPENSSL_assert(EVP_CIPHER_CTX_iv_length(&ctx) == this->keyLength);
 			EVP_CipherInit_ex(&ctx, NULL, NULL, key, iv, do_encrypt);
 	
 			for(;;)
