@@ -24,7 +24,7 @@ class AesFileEnc{
 	private:
 		Aes_type type;
 		const char* keystore_path;
-		unsigned int keyLength;
+		int keyLength;
 		unsigned char * key ( );
 		unsigned char * iv ( );
 		unsigned char* iv (int keyLength );

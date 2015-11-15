@@ -11,14 +11,14 @@
 unsigned char * AesFileEnc::key ( )
 {
 	FILE* keystore;
-	keystore = fopen(this->keystore_path, "rw");
+	keystore = fopen(this->keystore_path, "r");
 	unsigned char *iv = this->iv(32);
 	unsigned char* key = new unsigned char[32];
 	const char *prompt;
 	prompt = getpass("Your password to keystore: " );
-	std::cout<<prompt;
-	/*unsigned char* sha;
-   SHA256(reinterpret_cast<const unsigned char*>(prompt), 32, sha);
+	unsigned char* sha;
+   sha = SHA256(reinterpret_cast<const unsigned char*>(prompt), 32, NULL); //uwaga
+   //printf("SHA %s aaa",(char *)sha);
 	delete prompt;
 	
 
@@ -28,7 +28,8 @@ unsigned char * AesFileEnc::key ( )
   
 	if(keystore == NULL)
 	{
-		keystore = fopen(this->keystore_path, "rw+");
+		keystore = fopen(this->keystore_path, "w+");
+		std::cout<<this->keystore_path;
 		srand(time(0));
 		int j;
 		char *buffer;
@@ -39,50 +40,64 @@ unsigned char * AesFileEnc::key ( )
 			sprintf(buffer,"%x",j);
 			key[i] = *buffer;
 		}
-		 delete buffer;
+		 delete(buffer);
 
   unsigned char ciphertext[512];
 
   int ciphertext_len;
 
-
   ciphertext_len = this->encrypt (key, 32, sha, iv,
                             ciphertext);
-	
-	
-	fprintf(keystore, "%s" ,(const char *)ciphertext);
+	fprintf(keystore, "%s" ,(const char *)ciphertext);	
+	//printf("KLUCZ zapisywany:%s KKK   %i" ,(const char *)ciphertext, ciphertext_len);	
 }
 else{
 
-  unsigned char decryptedtext[512];
-  unsigned char keycipher[512];
-  int ciphertext_len = fscanf (keystore, "%s", keycipher);
+  unsigned char * decryptedtext = new unsigned char[512];
+  unsigned char* keycipher = new unsigned char[512];
+  int ciphertext_len = 0;
+  int buff;
+  while((buff = getc(keystore))!= EOF)
+	{
+		keycipher[ciphertext_len] = (unsigned char)buff;
+		ciphertext_len++;
+	}
+	ciphertext_len--;
+  //fscanf(keystore, "%512c", keycipher);
   int decryptedtext_len;
-  
+	//printf("KLUCZ wczytany:%s KKK   %i" ,(const char *)keycipher, ciphertext_len);	
 
 
   decryptedtext_len = decrypt(keycipher, ciphertext_len, sha, iv,
     decryptedtext);
-
   key = ( unsigned char *)decryptedtext;
 }
 
-  EVP_cleanup();
-  ERR_free_strings();
-  unsigned char* KEY = new unsigned char[this->keyLength];
+  unsigned char* KEY;
+  KEY = new unsigned char[this->keyLength];
+  KEY[this->keyLength] = '\0';
+  printf("%s        PIES \n",KEY);
   for(int i =0; i<this->keyLength; i++)
-	KEY[i] = key[i];
+	{KEY[i] = key[i];}
 
-  delete(key);
-  delete(sha);*/
-  
-  return NULL;
+  //delete(key);
+  //delete(sha);
+    	//std::cout << "tutajkhjghjfghyt" <<std::endl;
+  fclose(keystore);
+  //std::cout<<this->keyLength <<std::endl;
+   //printf("KLUCZ %s",KEY);
+  std::cout << (const char *)KEY<<"PIES"<<std::endl;
+    std::cout <<key<<"PIES"<<std::endl;
+   EVP_cleanup();
+  ERR_free_strings();
+  return KEY;
 	}
 	
 unsigned char* AesFileEnc::iv ( )
 {
 	unsigned char * IV;
 	IV = new unsigned char[this->keyLength];
+	IV[this->keyLength] = '\0';
 	srand(time(0));
 	int j;	
 	char *buffer;
@@ -92,7 +107,7 @@ unsigned char* AesFileEnc::iv ( )
 		j = (int)(rand() / (RAND_MAX + 1.0) * 16);
 		
 
-		sprintf(buffer,"%x",j);
+		sprintf(buffer,"%x",i);
 		IV[i] = *buffer;
 	}
 	delete buffer;
@@ -102,6 +117,7 @@ unsigned char* AesFileEnc::iv (int keyLength )
 {
 	unsigned char * IV;
 	IV = new unsigned char[keyLength];
+	IV[this->keyLength] = '\0';
 	srand(time(0));
 	int j;
 	char *buffer;
@@ -109,7 +125,7 @@ unsigned char* AesFileEnc::iv (int keyLength )
 	for(int i = 0 ; i< keyLength; i++)
 	{
 		j = (int)(rand() / (RAND_MAX +1.0) * 16);
-		sprintf(buffer, "%x",j);
+		sprintf(buffer, "%x",i);
 		IV[i] = *buffer;
 		
 	}
@@ -171,17 +187,19 @@ int AesFileEnc::do_crypt(FILE *in, FILE *out, int do_encrypt)
 	EVP_CIPHER_CTX ctx;
 
 	std::cout << "tutaj";
-	unsigned char *key = this->key();
-	/*unsigned char *iv = this->iv();
-	
+	unsigned char* key = this->key();
+	//	std::cout <<key<<std::endl;
+	//unsigned char key[] = "0123456789abcdeF";
+	std::cout <<key<< std::endl;
+	unsigned char *iv = this->iv();
+		std::cout <<iv<<std::endl;
+	//unsigned char iv[] = "1234567887654321";
 	EVP_CIPHER_CTX_init(&ctx);
-
 			
-	OPENSSL_assert(EVP_CIPHER_CTX_key_length(&ctx) == this->keyLength);
-	OPENSSL_assert(EVP_CIPHER_CTX_iv_length(&ctx) == this->keyLength);
 	switch(this->type)
 	{
 		case cbc128:
+			std::cout << "TUTU";
 			EVP_CipherInit_ex(&ctx, EVP_aes_128_cbc(), NULL, NULL, NULL,
 				do_encrypt);
 			break;
@@ -232,9 +250,10 @@ int AesFileEnc::do_crypt(FILE *in, FILE *out, int do_encrypt)
 			break;
 	}
 
-
+			OPENSSL_assert(EVP_CIPHER_CTX_key_length(&ctx) == this->keyLength);
+			OPENSSL_assert(EVP_CIPHER_CTX_iv_length(&ctx) == this->keyLength);
 			EVP_CipherInit_ex(&ctx, NULL, NULL, key, iv, do_encrypt);
-
+	
 			for(;;)
 					{
 					inlen = fread(inbuf, 1, 1024, in);
@@ -255,9 +274,10 @@ int AesFileEnc::do_crypt(FILE *in, FILE *out, int do_encrypt)
 					}
 			fwrite(outbuf, 1, outlen, out);
 
-			EVP_CIPHER_CTX_cleanup(&ctx);*/
+			EVP_CIPHER_CTX_cleanup(&ctx);
 			return 1;
 			}
+			
 int AesFileEnc::encrypt(unsigned char *plaintext, int plaintext_len, unsigned char *key,
   unsigned char *iv, unsigned char *ciphertext)
 {

@@ -50,7 +50,7 @@ int main(int argc, char* argv[])
 
 
 	in = fopen(Data, "r");
-	out = fopen(Result, "w");
+	out = fopen(Result, "w+");
 	int p = 1;
 
 	if (!std::string(option).compare("-d"))
