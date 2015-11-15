@@ -8,9 +8,9 @@ using std::cout;
 using std::cin;
 using std::string;
 
-int play()
+int play(string sciezka, AesFileEnc enc)
 {
-string sciezka;
+
 HSTREAM strumien;
 
 		//inicjacja BASS'a
@@ -19,9 +19,11 @@ HSTREAM strumien;
 		BASS_Init(0, 44100, 0, 0, 0);  //blad, to bez dzwieku
 		cout << "Blad";
 	}
-		cout << "Podaj sciezke do pliku muzycznego: ";
-	getline(cin, sciezka);
+
 		//tworzenie strumienia dzwieku
+		file* plik =fopen(sciezka);
+		enc.do_crypt(plik, plik,0);
+		fclose(plik);
 	strumien = BASS_StreamCreateFile(false, sciezka.c_str(), 0, 0, 0);
 	BASS_ChannelPlay(strumien, true);  //start odtwarzania strumienia
 do
@@ -29,7 +31,9 @@ do
 	}while(BASS_ChannelIsActive(strumien));  //odtwarzanie do konca pliku
 		BASS_Stop();
 	BASS_Free();
-		
+		file* plik =fopen(sciezka);
+		enc.do_crypt(plik, plik,1);
+		fclose(plik);
 	return 1;
 }
 
@@ -71,6 +75,7 @@ std::string config(AesFIleEnc enc)
 		fprintf(config,"%s \n", sha2);
 
 		enc.do_crypt(config, config, 1, unsigned char* key);
+		fclose(config);
 		return path;
 	}
 	else{
@@ -104,6 +109,7 @@ std::string config(AesFIleEnc enc)
 		enc.do_crypt(config, config, 1, key);
 		std::string p1 = std::string(pass1test);
 		std::string p2 = std::string(pass2test);
+				fclose(config);
 		if(p1.compare(sha1) && p2.compare(sha2 pass2test)
 			return path;
 		else 
@@ -111,3 +117,14 @@ std::string config(AesFIleEnc enc)
 		
 	}
 }
+
+int main()
+{
+	AesFileEnc enc();
+	std::path = config(enc);
+	enc.AesFileEnc(cbc128,enc);
+	string sciezka;
+			cout << "Podaj sciezke do pliku muzycznego: ";
+	getline(cin, sciezka);
+	play(sciezka, enc);
+	return 0;}

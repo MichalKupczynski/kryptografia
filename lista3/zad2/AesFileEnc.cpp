@@ -158,7 +158,55 @@ AesFileEnc::AesFileEnc(Aes_type type, const char* keystore_path)
 			break;
 	}
 }
+int AesFileEnc::do_crypt(FILE *in, FILE *out, int do_encrypt, unsigned char* key)
+{
+	/* Allow enough space in output buffer for additional block */
+	unsigned char inbuf[1024], outbuf[1024 + EVP_MAX_BLOCK_LENGTH];
+	int inlen, outlen;
+	EVP_CIPHER_CTX ctx;
 
+	std::cout << "tutaj";
+	//	std::cout <<key<<std::endl;
+	//unsigned char key[] = "0123456789abcdeF";
+	std::cout <<key<< std::endl;
+
+
+	//unsigned char iv[] = "1234567887654321";
+	EVP_CIPHER_CTX_init(&ctx);
+	
+			EVP_CipherInit_ex(&ctx, EVP_aes_128_cbc(), NULL, NULL, NULL,
+				do_encrypt);
+			
+	unsigned char *iv = this->iv(EVP_CIPHER_CTX_iv_length(&ctx));	
+			std::cout<< this->keyLength << std::endl;
+			std::cout<< EVP_CIPHER_CTX_iv_length(&ctx) <<std::endl;
+			OPENSSL_assert(EVP_CIPHER_CTX_key_length(&ctx) == this->keyLength);
+			//OPENSSL_assert(EVP_CIPHER_CTX_iv_length(&ctx) == this->keyLength);
+			EVP_CipherInit_ex(&ctx, NULL, NULL, key, iv, do_encrypt);
+	
+			for(;;)
+					{
+					inlen = fread(inbuf, 1, 1024, in);
+					if(inlen <= 0) break;
+					if(!EVP_CipherUpdate(&ctx, outbuf, &outlen, inbuf, inlen))
+							{
+	
+							EVP_CIPHER_CTX_cleanup(&ctx);
+							return 0;
+							}
+					fwrite(outbuf, 1, outlen, out);
+					}
+			if(!EVP_CipherFinal_ex(&ctx, outbuf, &outlen))
+					{
+
+					EVP_CIPHER_CTX_cleanup(&ctx);
+					return 0;
+					}
+			fwrite(outbuf, 1, outlen, out);
+
+			EVP_CIPHER_CTX_cleanup(&ctx);
+			return 1;
+			}
 int AesFileEnc::do_crypt(FILE *in, FILE *out, int do_encrypt)
 {
 	/* Allow enough space in output buffer for additional block */
