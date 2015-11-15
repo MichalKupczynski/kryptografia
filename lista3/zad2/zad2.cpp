@@ -8,13 +8,6 @@ using std::cout;
 using std::cin;
 using std::string;
 
-struct configuration
-{
-	std::string sha1;
-	std:string sha2;
-	std::string keystore_path;
-};
-
 int play()
 {
 string sciezka;
@@ -40,7 +33,7 @@ do
 	return 1;
 }
 
-configuration config(AesFIleEnc enc)
+std::string config(AesFIleEnc enc)
 {
 	FILE* config;
 	config = fopen("config", "r");
@@ -57,7 +50,7 @@ configuration config(AesFIleEnc enc)
 		conf.keystore_path = path;
 		std::string prompt;
 		prompt = getpass("Podaj swoje hasło: " );
-		fscanf(config,"%s \n", path);
+		fprintf(config,"%s \n", path);
 		char pass1[256];
 		char pass2[256];
 		for(int i = 0; i<255;i++)
@@ -74,13 +67,11 @@ configuration config(AesFIleEnc enc)
 		}
 		sha1 = SHA256(pass1, 32, NULL);
 		sha2 = SHA256(pass2, 32, NULL);
-		conf.sha1 =sha1;
-		conf.sha2 = sha2;
-		fscanf(config,"%s \n", sha1);
-		fscanf(config,"%s \n", sha2);
+		fprintf(config,"%s \n", sha1);
+		fprintf(config,"%s \n", sha2);
 
-		encdo_crypt(config, config, 1, unsigned char* key);
-		return conf;
+		enc.do_crypt(config, config, 1, unsigned char* key);
+		return path;
 	}
 	else{
 	
@@ -103,9 +94,20 @@ configuration config(AesFIleEnc enc)
 		}
 		sha1 = SHA256(pass1, 32, NULL);
 		sha2 = SHA256(pass2, 32, NULL);
-				char pass1[256];
-		char pass2[256];
+		char pass1test[256];
+		char pass2test[256];
+		std::string path;
+		encdo_crypt(config, config, 0, key);
+		fscanf(config, "%s \n", path);
+		fscanf(config, "%s \n", pass1test);
+		fscanf(config, "%s \n", pass2test);
+		enc.do_crypt(config, config, 1, key);
+		std::string p1 = std::string(pass1test);
+		std::string p2 = std::string(pass2test);
+		if(p1.compare(sha1) && p2.compare(sha2 pass2test)
+			return path;
+		else 
+			return NULL;
 		
-		encdo_crypt(config, config, 0, unsigned char* key);
 	}
-	}
+}
